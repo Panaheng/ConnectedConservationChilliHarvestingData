@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connected Conservation | Chilli Harvest Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #12402a;
+    --leaf: #2e8b57;
+    --mint: #e4f2e7;
+    --paper: #f7fbf6;
+    --chilli: #d63a2f;
+    --ink: #173022;
+    --muted: #5d7566;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: "Figtree", sans-serif; background: var(--paper); color: var(--ink); line-height: 1.55; }
+  h1, h2, h3 { font-family: "Fraunces", serif; line-height: 1.15; }
+  button { font: inherit; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--chilli); outline-offset: 2px; }
+
+  /* ---------- Top bar: menu icon (left), logo + name (right) ---------- */
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--forest); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .7rem 5vw;
+  }
+  .menu-btn {
+    background: transparent; border: 0; cursor: pointer; padding: .6rem;
+    border-radius: 10px; display: flex; flex-direction: column; gap: 5px;
+  }
+  .menu-btn span { display: block; width: 26px; height: 3px; background: #fff; border-radius: 2px; }
+  .menu-btn:hover { background: rgba(255,255,255,.14); }
+  .brand { display: flex; align-items: center; gap: .7rem; cursor: pointer; }
+  .brand .mark { height: 50px; width: auto; display: block; border-radius: 10px; background: #e6eaec; padding: 5px 7px; }
+  .brand b { font-family: "Fraunces", serif; font-size: 1.2rem; font-weight: 700; }
+  @media (max-width: 480px) { .brand b { font-size: .95rem; } .brand .mark { height: 40px; } }
+
+  /* ---------- Side menu (active site statistics) ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(8,30,18,.55); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 20; }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; left: 0; height: 100%; width: min(390px, 92vw);
+    background: #fff; z-index: 30; overflow-y: auto; padding: 1.4rem 1.4rem 2rem;
+    transform: translateX(-100%); transition: transform .28s ease; box-shadow: 8px 0 30px rgba(0,0,0,.25);
+  }
+  .drawer.open { transform: none; }
+  .drawer-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+  .drawer-top h2 { color: var(--forest); font-size: 1.5rem; }
+  .close-btn { background: var(--mint); border: 0; width: 38px; height: 38px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; color: var(--forest); }
+  .close-btn:hover { background: #cfe6d5; }
+  .home-link { width: 100%; text-align: left; background: transparent; border: 0; padding: .6rem .2rem; color: var(--leaf); font-weight: 600; cursor: pointer; }
+  .drawer h3 { color: var(--forest); font-size: 1.1rem; margin-bottom: .6rem; }
+  .site-btn {
+    display: block; width: 100%; text-align: left; background: #fff; cursor: pointer;
+    border: 1px solid #d7e6da; border-left: 6px solid var(--leaf); border-radius: 12px;
+    padding: .85rem 1rem; margin-bottom: .6rem; color: var(--ink);
+  }
+  .site-btn:hover, .site-btn.active { background: var(--mint); }
+  .site-btn b { font-family: "Fraunces", serif; font-size: 1.1rem; color: var(--forest); }
+  
+  /* ---------- Welcome ---------- */
+  .hero {
+    background:
+      radial-gradient(circle at 85% 20%, rgba(78,184,120,.35), transparent 45%),
+      linear-gradient(160deg, var(--forest) 0%, #1c5c3a 60%, var(--leaf) 130%);
+    color: #fff; padding: 12vh 5vw 14vh; min-height: 70vh;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .hero h1 { font-size: clamp(2.4rem, 6vw, 4.6rem); max-width: 16ch; }
+  .hero p { max-width: 60ch; margin-top: 1.4rem; font-size: 1.15rem; color: #d7ecdd; }
+  .menu-hint {
+    margin-top: 2rem; display: inline-flex; align-items: center; gap: .9rem; align-self: flex-start;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35);
+    border-radius: 14px; padding: .9rem 1.3rem; font-weight: 600; font-size: 1.05rem;
+  }
+  .hint-icon { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .hint-icon i { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+
+  .info { padding: 4rem 5vw 3rem; max-width: 1150px; margin: 0 auto; display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .info article { background: #fff; border: 1px solid #d7e6da; border-top: 6px solid var(--leaf); border-radius: 14px; padding: 1.6rem; }
+  .info h3 { color: var(--forest); font-size: 1.4rem; margin-bottom: .7rem; }
+  .info p { color: var(--ink); margin-bottom: .8rem; }
+  .info ul { padding-left: 1.2rem; color: var(--ink); }
+  .info li { margin-bottom: .4rem; }
+  .source { text-align: center; color: var(--muted); font-size: .9rem; padding: 0 5vw 3rem; }
+  .source a { color: var(--leaf); font-weight: 600; }
+
+  /* ---------- Farm page ---------- */
+  #farmView { display: none; padding: 3rem 5vw 4rem; max-width: 1100px; margin: 0 auto; }
+  #farmView h2 { font-size: clamp(2rem, 4vw, 3rem); color: var(--forest); }
+  .sub { color: var(--muted); margin: .4rem 0 2rem; }
+
+  .stats { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-bottom: 2.5rem; }
+  .stat { padding: 1.3rem 1.4rem; border-radius: 14px; background: var(--mint); border-left: 6px solid var(--leaf); }
+  .stat.high { border-color: var(--leaf); }
+  .stat.size { border-color: var(--forest); background: #fff; border-top: 1px solid #d7e6da; border-right: 1px solid #d7e6da; border-bottom: 1px solid #d7e6da; }
+  .stat.low  { border-color: var(--chilli); background: #fdeceb; }
+  .stat small { color: var(--muted); font-weight: 600; }
+  .stat strong { display: block; font-family: "Fraunces", serif; font-size: 2.2rem; margin: .1rem 0; }
+  .stat span { color: var(--muted); }
+
+  .chart { background: #fff; border-radius: 14px; padding: 1.5rem; border: 1px solid #d7e6da; margin-bottom: 2.5rem; }
+  .chart h3 { margin-bottom: 1.2rem; color: var(--forest); }
+  .bars { display: flex; align-items: flex-end; gap: 1.5%; height: 230px; padding-top: 1.6rem; }
+  .bar-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; }
+  .bar { width: 100%; max-width: 64px; border-radius: 6px 6px 0 0; background: var(--leaf); position: relative; min-height: 4px; }
+  .bar.rain { background: #3f8fc4; }
+  .bar.max { background: var(--forest); }
+  .bar.min { background: var(--chilli); }
+  .bar::before { content: attr(data-val); position: absolute; top: -1.4rem; left: 50%; transform: translateX(-50%); font-size: .78rem; font-weight: 600; white-space: nowrap; }
+  .bar-col label { font-size: .78rem; margin-top: .45rem; color: var(--muted); }
+
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #d7e6da; }
+  th, td { padding: .85rem 1rem; text-align: left; }
+  th { background: var(--forest); color: #fff; font-weight: 600; }
+  tr + tr td { border-top: 1px solid #e3eee6; }
+  tr.max td { background: #e4f2e7; font-weight: 600; }
+  tr.min td { background: #fdeceb; font-weight: 600; }
+  .tag { font-size: .8rem; padding: .15rem .6rem; border-radius: 999px; color: #fff; margin-left: .5rem; }
+  .tag.max { background: var(--forest); } .tag.min { background: var(--chilli); }
+
+  footer { text-align: center; padding: 2rem 5vw; color: var(--muted); font-size: .9rem; border-top: 1px solid #d7e6da; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header>
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="brand" onclick="showWelcome()" title="Home">
+    <svg class="mark" viewBox="16 4 106 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="86" cy="11" r="5.2" fill="#7b8539"/><circle cx="74" cy="12" r="5.2" fill="#007467"/><circle cx="99" cy="13" r="5.2" fill="#54bcb8"/><circle cx="63" cy="15" r="5.2" fill="#0081a3"/><circle cx="111" cy="17" r="5.2" fill="#173e34"/><circle cx="53" cy="20" r="5.2" fill="#799a3d"/><circle cx="87" cy="23" r="5.2" fill="#07aebb"/><circle cx="75" cy="24" r="5.2" fill="#97c340"/><circle cx="99" cy="25" r="5.2" fill="#173e34"/><circle cx="64" cy="28" r="5.2" fill="#024f6e"/><circle cx="43" cy="29" r="5.2" fill="#027dbb"/><circle cx="111" cy="29" r="5.2" fill="#007c4d"/><circle cx="76" cy="35" r="5.2" fill="#026550"/><circle cx="87" cy="34" r="5.2" fill="#5f6439"/><circle cx="54" cy="35" r="5.2" fill="#016e47"/><circle cx="100" cy="36" r="5.2" fill="#1f376a"/><circle cx="35" cy="38" r="5.2" fill="#7b8539"/><circle cx="65" cy="40" r="5.2" fill="#17243d"/><circle cx="111" cy="40" r="5.2" fill="#90c6e7"/><circle cx="45" cy="43" r="5.2" fill="#0571b9"/><circle cx="29" cy="50" r="5.2" fill="#4579bc"/><circle cx="56" cy="49" r="5.2" fill="#7fbc4f"/><circle cx="40" cy="54" r="5.2" fill="#68bbaf"/><circle cx="51" cy="60" r="5.2" fill="#1b3259"/><circle cx="26" cy="62" r="5.2" fill="#94b7bc"/><circle cx="37" cy="66" r="5.2" fill="#87ccca"/><circle cx="49" cy="72" r="5.2" fill="#016e47"/><circle cx="25" cy="74" r="5.2" fill="#006f63"/><circle cx="36" cy="78" r="5.2" fill="#1f2a4f"/><circle cx="50" cy="85" r="5.2" fill="#94b7bc"/><circle cx="26" cy="86" r="5.2" fill="#007a40"/><circle cx="38" cy="90" r="5.2" fill="#0083bf"/><circle cx="54" cy="96" r="5.2" fill="#4b9462"/><circle cx="29" cy="98" r="5.2" fill="#008776"/><circle cx="43" cy="101" r="5.2" fill="#1aa852"/><circle cx="115" cy="104" r="5.2" fill="#007a54"/><circle cx="62" cy="105" r="5.2" fill="#303e92"/><circle cx="34" cy="109" r="5.2" fill="#024437"/><circle cx="50" cy="110" r="5.2" fill="#359043"/><circle cx="104" cy="110" r="5.2" fill="#10a750"/><circle cx="71" cy="111" r="5.2" fill="#7b8539"/><circle cx="93" cy="113" r="5.2" fill="#97c340"/><circle cx="82" cy="114" r="5.2" fill="#024437"/><circle cx="115" cy="116" r="5.2" fill="#6fc2b6"/><circle cx="41" cy="118" r="5.2" fill="#007467"/><circle cx="59" cy="119" r="5.2" fill="#038da8"/><circle cx="104" cy="122" r="5.2" fill="#73b84b"/><circle cx="70" cy="123" r="5.2" fill="#a4cd84"/><circle cx="94" cy="125" r="5.2" fill="#263067"/><circle cx="50" cy="126" r="5.2" fill="#008776"/><circle cx="82" cy="125" r="5.2" fill="#266194"/><circle cx="115" cy="128" r="5.2" fill="#2a3482"/><circle cx="60" cy="132" r="5.2" fill="#43ad4a"/><circle cx="105" cy="133" r="5.2" fill="#008776"/><circle cx="72" cy="135" r="5.2" fill="#29275c"/><circle cx="84" cy="137" r="5.2" fill="#00685f"/><circle cx="95" cy="136" r="5.2" fill="#00b2e3"/></svg>
+    <b>Connected Conservation</b>
+  </div>
+</header>
+
+<!-- Side menu: active site statistics -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Active sites statistics">
+  <div class="drawer-top">
+    <h2>Active sites</h2>
+    <button class="close-btn" id="closeBtn" aria-label="Close menu">&times;</button>
+  </div>
+  <button class="home-link" onclick="showWelcome()">&larr; Welcome page</button>
+  
+  <div id="topSitesContainer" style="margin-bottom: 2rem; display: none;">
+    <h3>Top Performing Sites</h3>
+    <div id="topSitesList"></div>
+  </div>
+
+  <h3>Select a site to view its statistics</h3>
+  <div id="siteList"></div>
+</aside>
+
+<main>
+  <!-- Welcome page -->
+  <section id="welcome">
+    <div class="hero">
+      <h1>Growing chilli where people and wildlife share the land.</h1>
+      <p>Connected Conservation works to resolve the conflict between people and wildlife in southern Africa,
+         combining scientific research with practical, community-based solutions.</p>
+      <div class="menu-hint">
+        <span class="hint-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Find more by clicking the menu icon at the top left.</span>
+      </div>
+    </div>
+
+    <div class="info">
+      <article>
+        <h3>About Connected Conservation</h3>
+        <p>Drawing on decades of field research and experience, Connected Conservation develops new ways to resolve human-wildlife conflict in Southern Africa. Multidisciplinary scientific research is combined with community-based strategies to understand conflict situations and provide practical solutions.</p>
+        <p>Our work includes pioneering community-based conflict mitigation, such as using chilli as a wildlife deterrent, satellite tracking of elephants, technical advice and training, and contributing to the Kavango Zambezi Transfrontier Conservation Area.</p>
+      </article>
+
+      <article>
+        <h3>What is agro-ecology?</h3>
+        <p>Agro-ecology is a way of farming that works with nature instead of against it. It applies ecological principles to crops, soil, water and local knowledge so that farms stay productive while the surrounding environment stays healthy.</p>
+        <ul>
+          <li>Facts about agro-ecology:</li>
+          <li>Protects crops without harming wildlife</li>
+          <li>Uses natural deterrents such as chilli</li>
+          <li>Builds household income and food security</li>
+          <li>Keeps farming and conservation working together</li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>Conserving Wildlife and Enhancing Livelihoods</h3>
+        <p>Promoting Coexistence of People and Wildlife in Southern Africa.</p>
+      </article>
+    </div>
+    <p class="source">Learn more at <a href="https://www.connectedconservation.com/about/" target="_blank" rel="noopener">connectedconservation.com/about</a></p>
+  </section>
+
+  <!-- Farm page -->
+  <section id="farmView" aria-live="polite">
+    <h2 id="farmName"></h2>
+    <p class="sub" id="farmSub"></p>
+    <div class="stats" id="stats"></div>
+    <div class="chart"><h3>Harvest per season (kg)</h3><div class="bars" id="harvestBars"></div></div>
+    <div class="chart"><h3>Rainfall per season (mm)</h3><div class="bars" id="rainBars"></div></div>
+    <h3 style="margin-bottom:1rem;color:var(--forest)">Season by season</h3>
+    <div class="scroll"><table id="table"></table></div>
+  </section>
+</main>
+
+<footer>&copy; <span id="year"></span> Connected Conservation. Agro-ecology for people and wildlife.</footer>
+
+<script>
+  const welcome = document.getElementById("welcome");
+  const farmView = document.getElementById("farmView");
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  const menuBtn = document.getElementById("menuBtn");
+  document.getElementById("year").textContent = new Date().getFullYear();
+  const nf = n => n.toLocaleString("en-US");
+
+  let globalData = null; // Store fetched data
+
+  /* ----- Side menu open / close ----- */
+  function openMenu() {
+    drawer.classList.add("open"); overlay.classList.add("open");
+    menuBtn.setAttribute("aria-expanded", "true");
+  }
+  function closeMenu() {
+    drawer.classList.remove("open"); overlay.classList.remove("open");
+    menuBtn.setAttribute("aria-expanded", "false");
+  }
+  menuBtn.onclick = openMenu;
+  document.getElementById("closeBtn").onclick = closeMenu;
+  overlay.onclick = closeMenu;
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
+
+  /* ----- Data processing helpers ----- */
+  function processFarmData(farm) {
+    let totalHarvest = 0;
+    let highest = { harvest: -Infinity, season: '', rainfall: 0 };
+    let lowest = { harvest: Infinity, season: '', rainfall: 0 };
+
+    farm.seasons.forEach(s => {
+      totalHarvest += s.harvest;
+      if (s.harvest > highest.harvest) highest = s;
+      if (s.harvest < lowest.harvest) lowest = s;
+    });
+
+    return {
+      ...farm,
+      total: totalHarvest,
+      highest: highest,
+      lowest: lowest
+    };
+  }
+
+  /* ----- Load data from JSON file and build menu ----- */
+  fetch("data.json")
+    .then(r => r.json())
+    .then(data => {
+      globalData = data;
+      
+      const siteList = document.getElementById("siteList");
+      const topSitesList = document.getElementById("topSitesList");
+      const topSitesContainer = document.getElementById("topSitesContainer");
+
+      // Process data for top sites
+      const processedSites = data.sites.map(s => {
+        const rawFarm = data.farms[s.id];
+        const processed = processFarmData(rawFarm);
+        return { id: s.id, name: s.name, total: processed.total };
+      });
+
+      processedSites.sort((a, b) => b.total - a.total);
+      const top3 = processedSites.slice(0, 3);
+
+      if (top3.length > 0) {
+        topSitesContainer.style.display = "block";
+        topSitesList.innerHTML = top3.map((site, index) => `
+          <button class="site-btn" style="border-left-color: var(--forest); padding: 0.6rem 1rem;" onclick="showFarm(${site.id})">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b>${index + 1}. ${site.name}</b>
+              <span style="font-size:0.9rem; font-weight:600; color:var(--leaf);">${nf(site.total)} kg</span>
+            </div>
+          </button>
+        `).join("");
+      }
+
+      // Populate main site list
+      data.sites.forEach(s => {
+        const b = document.createElement("button");
+        b.className = "site-btn"; b.dataset.id = s.id;
+        b.innerHTML = `<b>${s.name}</b>`;
+        b.onclick = () => showFarm(s.id);
+        siteList.appendChild(b);
+      });
+    })
+    .catch(err => console.error("Error loading data:", err));
+
+  function showWelcome() {
+    welcome.style.display = "block"; farmView.style.display = "none";
+    document.querySelectorAll(".site-btn").forEach(b => b.classList.remove("active"));
+    closeMenu(); window.scrollTo(0, 0);
+  }
+
+  function showFarm(id) {
+    if (!globalData) return;
+    
+    const rawFarm = globalData.farms[id];
+    if (!rawFarm) return;
+    
+    const d = processFarmData(rawFarm);
+
+    welcome.style.display = "none"; farmView.style.display = "block";
+    document.querySelectorAll(".site-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+    closeMenu(); window.scrollTo(0, 0);
+
+    document.getElementById("farmName").textContent = d.name + " Farm";
+    document.getElementById("farmSub").textContent =
+      "Farm size: " + d.sizeHa + " hectares. Chilli harvest and rainfall for the past " + d.seasons.length + " seasons. Total archived harvest: " + nf(d.total) + " kg.";
+
+    document.getElementById("stats").innerHTML = `
+      <div class="stat size"><small>Farm size</small><strong>${d.sizeHa} ha</strong><span>Hectares under this farm</span></div>
+      <div class="stat"><small>Total Harvest</small><strong>${nf(d.total)} kg</strong><span>Archived across all seasons</span></div>
+      <div class="stat high"><small>Highest harvest</small><strong>${nf(d.highest.harvest)} kg</strong><span>Season ${d.highest.season}, rainfall ${nf(d.highest.rainfall)} mm</span></div>
+      <div class="stat low"><small>Lowest harvest</small><strong>${nf(d.lowest.harvest)} kg</strong><span>Season ${d.lowest.season}, rainfall ${nf(d.lowest.rainfall)} mm</span></div>`;
+
+    drawBars("harvestBars", d, "harvest", "kg");
+    drawBars("rainBars", d, "rainfall", "mm", true);
+
+    document.getElementById("table").innerHTML =
+      "<tr><th>Season</th><th>Harvest (kg)</th><th>Rainfall (mm)</th></tr>" +
+      d.seasons.map(s => {
+        const isMax = s.season === d.highest.season, isMin = s.season === d.lowest.season;
+        const tag = isMax ? '<span class="tag max">Highest</span>' : isMin ? '<span class="tag min">Lowest</span>' : "";
+        return `<tr class="${isMax ? "max" : isMin ? "min" : ""}"><td>${s.season}${tag}</td><td>${nf(s.harvest)}</td><td>${nf(s.rainfall)}</td></tr>`;
+      }).join("");
+  }
+
+  function drawBars(elId, d, key, unit, isRain) {
+    const max = Math.max(...d.seasons.map(s => s[key]));
+    document.getElementById(elId).innerHTML = d.seasons.map(s => {
+      const h = Math.round((s[key] / max) * 82);
+      let cls = isRain ? "bar rain" : "bar";
+      if (!isRain && s.season === d.highest.season) cls += " max";
+      if (!isRain && s.season === d.lowest.season) cls += " min";
+      return `<div class="bar-col"><div class="${cls}" style="height:${h}%" data-val="${nf(s[key])}" title="${s.season}: ${nf(s[key])} ${unit}"></div><label>${s.season}</label></div>`;
+    }).join("");
+  }
+</script>
+</body>
+</html>

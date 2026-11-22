@@ -1,0 +1,48 @@
+{
+  "sites": [
+    { "id": 1, "name": "Mutwe" },
+    { "id": 2, "name": "Chewumba" },
+    { "id": 3, "name": "Woodlands" },
+    { "id": 4, "name": "Matetsi" }
+  ],
+  "farms": {
+    "1": {
+      "name": "Mutwe",
+      "sizeHa": 0.5,
+      "seasons": [
+    
+        { "season": "2025/26", "harvest": 4000, "rainfall": 610 }
+      ]
+    },
+    "2": {
+      "name": "Chewumba",
+      "sizeHa": 1.5,
+      "seasons": [
+        { "season": "2019/20", "harvest": 4438, "rainfall": 450 },
+        { "season": "2020/21", "harvest": 7715, "rainfall": 780 },
+        { "season": "2021/22", "harvest": 4248, "rainfall": 550 },
+        { "season": "2022/23", "harvest": 3854, "rainfall": 600 },
+        { "season": "2023/24", "harvest": 2838, "rainfall": 650 },
+        { "season": "2024/25", "harvest": 3674, "rainfall": 600 },
+        { "season": "2025/26", "harvest": 3387, "rainfall": 550 }
+      ]
+    },
+    "3": {
+      "name": "Woodlands",
+      "sizeHa": 2.5,
+      "seasons": [
+        
+        { "season": "2023/24", "harvest": 2945, "rainfall": 500 }
+      ]
+    },
+    "4": {
+      "name": "Matetsi",
+      "sizeHa": 0.5,
+      "seasons": [
+        
+        { "season": "2025/26", "harvest": 2555, "rainfall": 520 }
+      ]
+    }
+
+  }
+}
