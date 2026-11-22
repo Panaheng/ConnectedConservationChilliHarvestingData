@@ -17,6 +17,8 @@
     "2": {
       "name": "Chewumba",
       "sizeHa": 1.5,
+      "Active Farmers": 42,
+      "PricePerKg": 0.70,
       "seasons": [
         { "season": "2019/20", "harvest": 4438, "rainfall": 450 },
         { "season": "2020/21", "harvest": 7715, "rainfall": 780 },
