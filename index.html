@@ -15,6 +15,8 @@
     --chilli: #d63a2f;
     --ink: #173022;
     --muted: #5d7566;
+    --gold: #b8860b; /* Color for community money */
+    --clay: #a0522d; /* Color for farmers */
   }
   * { box-sizing: border-box; margin: 0; }
   body { font-family: "Figtree", sans-serif; background: var(--paper); color: var(--ink); line-height: 1.55; }
@@ -100,6 +102,8 @@
   .stat.high { border-color: var(--leaf); }
   .stat.size { border-color: var(--forest); background: #fff; border-top: 1px solid #d7e6da; border-right: 1px solid #d7e6da; border-bottom: 1px solid #d7e6da; }
   .stat.low  { border-color: var(--chilli); background: #fdeceb; }
+  .stat.community { border-color: var(--gold); background: #fffcf2; }
+  .stat.farmers { border-color: var(--clay); background: #fdf5f2; }
   .stat small { color: var(--muted); font-weight: 600; }
   .stat strong { display: block; font-family: "Fraunces", serif; font-size: 2.2rem; margin: .1rem 0; }
   .stat span { color: var(--muted); }
@@ -319,15 +323,53 @@
     document.querySelectorAll(".site-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
     closeMenu(); window.scrollTo(0, 0);
 
-    document.getElementById("farmName").textContent = d.name + " Farm";
-    document.getElementById("farmSub").textContent =
-      "Farm size: " + d.sizeHa + " hectares. Chilli harvest and rainfall for the past " + d.seasons.length + " seasons. Total archived harvest: " + nf(d.total) + " kg.";
+    // Check if this is Chewumba Farm (Community Farm)
+    const isCommunity = d.name.toLowerCase().includes("chewumba");
 
-    document.getElementById("stats").innerHTML = `
+    document.getElementById("farmName").textContent = d.name + (isCommunity ? " (Community Farm)" : " Farm");
+    
+    // Update subtitle with community info if applicable
+    let subText = "Farm size: " + d.sizeHa + " hectares. Chilli harvest and rainfall for the past " + d.seasons.length + " seasons. Total archived harvest: " + nf(d.total) + " kg.";
+    if (isCommunity) {
+      subText += " This community farm supports 42 participating farmers.";
+    }
+    document.getElementById("farmSub").textContent = subText;
+
+    // Build Stats Array dynamically
+    let statsHTML = `
       <div class="stat size"><small>Farm size</small><strong>${d.sizeHa} ha</strong><span>Hectares under this farm</span></div>
-      <div class="stat"><small>Total Harvest</small><strong>${nf(d.total)} kg</strong><span>Archived across all seasons</span></div>
+      <div class="stat"><small>Total Harvest</small><strong>${nf(d.total)} kg</strong><span>Archived across all seasons</span></div>`;
+
+    // Add Community-specific Stats if it's Chewumba
+    if (isCommunity) {
+      // The buying price is $0.70 per kg. 
+      const pricePerKg = 0.70; 
+      const totalValue = d.total * pricePerKg;
+      
+      // Add Farmers Stat Card
+      statsHTML += `
+        <div class="stat farmers">
+          <small>Active Farmers</small>
+          <strong>42</strong>
+          <span>Participating community members</span>
+        </div>
+      `;
+
+      // Add Community Money Stat Card
+      statsHTML += `
+        <div class="stat community">
+          <small>Community Benefit</small>
+          <strong>$${nf(totalValue.toFixed(2))}</strong>
+          <span>Total economic value generated (@ $0.70/kg)</span>
+        </div>`;
+    }
+
+    // Add Highest and Lowest stats
+    statsHTML += `
       <div class="stat high"><small>Highest harvest</small><strong>${nf(d.highest.harvest)} kg</strong><span>Season ${d.highest.season}, rainfall ${nf(d.highest.rainfall)} mm</span></div>
       <div class="stat low"><small>Lowest harvest</small><strong>${nf(d.lowest.harvest)} kg</strong><span>Season ${d.lowest.season}, rainfall ${nf(d.lowest.rainfall)} mm</span></div>`;
+
+    document.getElementById("stats").innerHTML = statsHTML;
 
     drawBars("harvestBars", d, "harvest", "kg");
     drawBars("rainBars", d, "rainfall", "mm", true);
